@@ -33,14 +33,20 @@ import org.apache.paimon.flink.sink.cdc.RichCdcMultiplexRecordEventParser;
 import org.apache.paimon.flink.sink.cdc.RichCdcMultiplexRecordSchemaBuilder;
 
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
+import org.apache.flink.api.common.restartstrategy.RestartStrategies;
+import org.apache.flink.api.common.time.Time;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.connector.kafka.source.KafkaSource;
+import org.apache.flink.runtime.state.hashmap.HashMapStateBackend;
+import org.apache.flink.streaming.api.CheckpointingMode;
+import org.apache.flink.streaming.api.environment.CheckpointConfig;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 
 import javax.annotation.Nullable;
 
 import java.util.Collections;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 import static org.apache.paimon.utils.Preconditions.checkArgument;
@@ -89,6 +95,7 @@ public class KafkaSyncDatabaseAction extends ActionBase {
     @Nullable private final Pattern includingPattern;
     @Nullable private final Pattern excludingPattern;
     private final Map<String, String> tableConfig;
+    private Map<String, String> otherConfig;
 
     public KafkaSyncDatabaseAction(
             Map<String, String> kafkaConfig,
@@ -110,9 +117,33 @@ public class KafkaSyncDatabaseAction extends ActionBase {
         this.tableConfig = tableConfig;
     }
 
-    public void build(StreamExecutionEnvironment env) throws Exception {
-        boolean caseSensitive = catalog.caseSensitive();
+    public KafkaSyncDatabaseAction(
+            Map<String, String> kafkaConfig,
+            String warehouse,
+            String database,
+            @Nullable String tablePrefix,
+            @Nullable String tableSuffix,
+            @Nullable String includingTables,
+            @Nullable String excludingTables,
+            Map<String, String> catalogConfig,
+            Map<String, String> tableConfig,
+            Map<String, String> otherConfig) {
+        this(
+                kafkaConfig,
+                warehouse,
+                database,
+                tablePrefix,
+                tableSuffix,
+                includingTables,
+                excludingTables,
+                catalogConfig,
+                tableConfig);
+        this.otherConfig = otherConfig;
+    }
 
+    public void build(StreamExecutionEnvironment env) throws Exception {
+        // boolean caseSensitive = catalog.caseSensitive();
+        boolean caseSensitive = false;
         if (!caseSensitive) {
             validateCaseInsensitive();
         }
@@ -125,7 +156,8 @@ public class KafkaSyncDatabaseAction extends ActionBase {
 
         DataFormat format = DataFormat.getDataFormat(kafkaConfig);
         RecordParser recordParser =
-                format.createParser(caseSensitive, tableNameConverter, Collections.emptyList());
+                format.createParser(
+                        caseSensitive, tableNameConverter, Collections.emptyList(), otherConfig);
         RichCdcMultiplexRecordSchemaBuilder schemaBuilder =
                 new RichCdcMultiplexRecordSchemaBuilder(tableConfig);
         Pattern includingPattern = this.includingPattern;
@@ -188,8 +220,31 @@ public class KafkaSyncDatabaseAction extends ActionBase {
 
     @Override
     public void run() throws Exception {
-        StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+        StreamExecutionEnvironment env =
+                StreamExecutionEnvironment.getExecutionEnvironment()
+                        .setParallelism(Integer.parseInt(otherConfig.get("global.parallelism")));
+        // Configuration conf = new Configuration();
+        // conf.setLong("rest.port", 10086);
+        // StreamExecutionEnvironment env =
+        //        StreamExecutionEnvironment.createLocalEnvironmentWithWebUI(conf)
+        //                .setParallelism(Integer.parseInt(otherConfig.get("global.parallelism")));
+        checkpointInit(env);
         build(env);
         env.execute(String.format("KAFKA-Paimon Database Sync: %s", database));
+    }
+
+    private static <T> void checkpointInit(StreamExecutionEnvironment env) {
+        env.enableCheckpointing(300000);
+        env.getCheckpointConfig().setCheckpointingMode(CheckpointingMode.EXACTLY_ONCE);
+        env.getCheckpointConfig().setMinPauseBetweenCheckpoints(60000);
+        env.getCheckpointConfig().setCheckpointTimeout(600000);
+        env.getCheckpointConfig().setMaxConcurrentCheckpoints(1);
+        env.getCheckpointConfig()
+                .setExternalizedCheckpointCleanup(
+                        CheckpointConfig.ExternalizedCheckpointCleanup.DELETE_ON_CANCELLATION);
+        env.setRestartStrategy(
+                RestartStrategies.fixedDelayRestart(
+                        Integer.MAX_VALUE, Time.of(10000, TimeUnit.MILLISECONDS)));
+        env.setStateBackend(new HashMapStateBackend());
     }
 }

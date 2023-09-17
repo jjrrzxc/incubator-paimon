@@ -146,6 +146,18 @@ public class MySqlTypeUtils {
                 false);
     }
 
+    public static DataType toDataTypeForMaxwell(String mysqlType) {
+        return toDataType(
+                MySqlTypeUtils.getShortType(mysqlType),
+                "decimal".equals(MySqlTypeUtils.getShortType(mysqlType))
+                        ? 25
+                        : MySqlTypeUtils.getPrecision(mysqlType),
+                "decimal".equals(MySqlTypeUtils.getShortType(mysqlType))
+                        ? 2
+                        : MySqlTypeUtils.getScale(mysqlType),
+                false);
+    }
+
     public static DataType toDataType(
             String type,
             @Nullable Integer length,
@@ -165,7 +177,7 @@ public class MySqlTypeUtils {
             boolean tinyInt1NotBool) {
         switch (type.toUpperCase()) {
             case BIT:
-                if (length == null || length == 1) {
+                if (length == null || length == 0 || length == 1) {
                     return DataTypes.BOOLEAN();
                 } else {
                     return DataTypes.BINARY((length + 7) / 8);
@@ -180,9 +192,9 @@ public class MySqlTypeUtils {
                 // Mybatis and mysql-connector-java map tinyint(1) to boolean by default, we behave
                 // the same way by default. To store number (-128~127), user can set the type
                 // mapping option 'tinyint1-not-bool' then tinyint(1) will be mapped to tinyint.
-                return length != null && length == 1 && !tinyInt1NotBool
-                        ? DataTypes.BOOLEAN()
-                        : DataTypes.TINYINT();
+                // return length != null && length == 1 && !tinyInt1NotBool
+                //        ? DataTypes.BOOLEAN()
+                //        : DataTypes.TINYINT();
             case TINYINT_UNSIGNED:
             case TINYINT_UNSIGNED_ZEROFILL:
             case SMALLINT:

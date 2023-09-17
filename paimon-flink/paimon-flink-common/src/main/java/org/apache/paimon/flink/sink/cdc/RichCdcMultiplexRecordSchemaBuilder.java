@@ -21,6 +21,7 @@ package org.apache.paimon.flink.sink.cdc;
 import org.apache.paimon.schema.Schema;
 import org.apache.paimon.types.DataType;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -37,7 +38,15 @@ public class RichCdcMultiplexRecordSchemaBuilder
     @Override
     public Optional<Schema> build(RichCdcMultiplexRecord record) {
         Schema.Builder builder = Schema.newBuilder();
-        builder.options(tableConfig);
+        if (tableConfig.get("bucket-key") != null
+                && record.primaryKeys().contains(tableConfig.get("bucket-key"))) {
+            builder.options(tableConfig);
+        } else {
+            Map<String, String> tempconfig = new HashMap<>();
+            tempconfig.putAll(tableConfig);
+            tempconfig.remove("bucket-key");
+            builder.options(tempconfig);
+        }
 
         for (Map.Entry<String, DataType> entry : record.fieldTypes().entrySet()) {
             builder.column(entry.getKey(), entry.getValue(), null);

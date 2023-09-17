@@ -33,13 +33,105 @@ under the License.
     <artifactId>paimon-flink-action</artifactId>
     <name>Paimon : Flink : Action</name>
 
+    <properties>
+        <flink.version>1.17.1</flink.version>
+        <flink.cdc.version>2.3.0</flink.cdc.version>
+        <frocksdbjni.version>6.20.3-ververica-2.0</frocksdbjni.version>
+        <geometry.version>2.2.0</geometry.version>
+        <avro.version>1.11.1</avro.version>
+        <mongodb.testcontainers.version>1.18.3</mongodb.testcontainers.version>
+        <json-path.version>2.8.0</json-path.version>
+    </properties>
     <dependencies>
         <dependency>
             <groupId>org.apache.paimon</groupId>
             <artifactId>paimon-flink-common</artifactId>
             <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-table-common</artifactId>
+            <version>1.17.1</version>
             <scope>provided</scope>
         </dependency>
+
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-common</artifactId>
+            <version>${hadoop.version}</version>
+            <scope>provided</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.avro</groupId>
+                    <artifactId>avro</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>log4j</groupId>
+                    <artifactId>log4j</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-log4j12</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>jdk.tools</groupId>
+                    <artifactId>jdk.tools</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-hdfs-client</artifactId>
+            <version>${hadoop.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-table-planner_${scala.binary.version}</artifactId>
+            <version>${flink.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-connector-kafka</artifactId>
+            <version>${flink.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-clients</artifactId>
+            <version>1.17.1</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-api</artifactId>
+            <version>${log4j.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-core</artifactId>
+            <version>${log4j.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-slf4j-impl</artifactId>
+            <version>${log4j.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
     </dependencies>
 
     <build>
@@ -55,6 +147,11 @@ under the License.
                             <goal>shade</goal>
                         </goals>
                         <configuration>
+                            <artifactSet>
+                                <includes combine.children="append">
+                                    <include>org.apache.paimon:paimon-flink-common</include>
+                                </includes>
+                            </artifactSet>
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <mainClass>org.apache.paimon.flink.action.FlinkActions</mainClass>
@@ -64,6 +161,114 @@ under the License.
                     </execution>
                 </executions>
             </plugin>
+
+<!--            <plugin>-->
+<!--                <groupId>org.apache.maven.plugins</groupId>-->
+<!--                <artifactId>maven-shade-plugin</artifactId>-->
+<!--                <executions>-->
+<!--                    <execution>-->
+<!--                        <id>shade-flink</id>-->
+<!--                        <phase>package</phase>-->
+<!--                        <goals>-->
+<!--                            <goal>shade</goal>-->
+<!--                        </goals>-->
+<!--                        <configuration>-->
+<!--                            &lt;!&ndash;-->
+<!--                            Make the file hbase-default.xml under flink-sql-connector-hbase-2.2/src/main/resources as the-->
+<!--                            hbase-default.xml in the shaded target jar here, because we don't want to check the hbase-->
+<!--                            version at client side. Also we don't need the extra default configs keys.-->
+<!--                            &ndash;&gt;-->
+<!--                            <transformers>-->
+<!--                                <transformer-->
+<!--                                        implementation="org.apache.maven.plugins.shade.resource.IncludeResourceTransformer">-->
+<!--                                    <resource>hbase-default.xml</resource>-->
+<!--                                    <file>hbase-default.xml</file>-->
+<!--                                </transformer>-->
+<!--                            </transformers>-->
+<!--                            <artifactSet>-->
+<!--                                <includes>-->
+<!--                                    <include>org.apache.flink:flink-connector-base</include>-->
+<!--                                    <include>org.apache.flink:flink-connector-hbase-base</include>-->
+<!--                                    <include>org.apache.flink:flink-connector-hbase-2.2</include>-->
+<!--                                    <include>org.apache.hbase:hbase-*</include>-->
+<!--                                    <include>org.apache.hbase.thirdparty:hbase-shaded-*</include>-->
+<!--                                    <include>org.apache.zookeeper:zookeeper</include>-->
+<!--                                    <include>org.apache.htrace:htrace-core4</include>-->
+<!--                                    <include>com.google.protobuf:protobuf-java</include>-->
+<!--                                    <include>commons-codec:commons-codec</include>-->
+<!--                                    <include>org.apache.commons:commons-crypto</include>-->
+<!--                                    <include>org.apache.commons:commons-lang3</include>-->
+<!--                                    <include>io.netty:netty-all</include>-->
+<!--                                    <include>io.dropwizard.metrics:metrics-core</include>-->
+<!--                                </includes>-->
+<!--                                <excludes>-->
+<!--                                    <exclude>org.apache.hbase:hbase-metrics*</exclude>-->
+<!--                                    <exclude>org.apache.hbase:hbase-server*</exclude>-->
+<!--                                    <exclude>org.apache.hbase:hbase-hadoop*-compat</exclude>-->
+<!--                                </excludes>-->
+<!--                            </artifactSet>-->
+<!--                            <filters>-->
+<!--                                <filter>-->
+<!--                                    <artifact>*:*</artifact>-->
+<!--                                    <excludes>-->
+<!--                                        &lt;!&ndash; excluded all these files for a clean jar &ndash;&gt;-->
+<!--                                        <exclude>META-INF/services/com.fasterxml.**</exclude>-->
+<!--                                        <exclude>META-INF/services/org.apache.hadoop.**</exclude>-->
+<!--                                        <exclude>META-INF/services/javax.**</exclude>-->
+<!--                                        <exclude>digesterRules.xml</exclude>-->
+<!--                                        <exclude>properties.dtd</exclude>-->
+<!--                                        <exclude>PropertyList-1.0.dtd</exclude>-->
+<!--                                        <exclude>LICENSE.txt</exclude>-->
+<!--                                        <exclude>*.proto</exclude>-->
+<!--                                        <exclude>protobuf/*</exclude>-->
+<!--                                    </excludes>-->
+<!--                                </filter>-->
+<!--                            </filters>-->
+<!--                            <relocations>-->
+<!--                                &lt;!&ndash; Force relocation of all HBase dependencies. &ndash;&gt;-->
+<!--                                <relocation>-->
+<!--                                    <pattern>org.apache.zookeeper</pattern>-->
+<!--                                    <shadedPattern>org.apache.flink.hbase.shaded.org.apache.zookeeper</shadedPattern>-->
+<!--                                </relocation>-->
+<!--                                <relocation>-->
+<!--                                    <pattern>org.apache.htrace</pattern>-->
+<!--                                    <shadedPattern>org.apache.flink.hbase.shaded.org.apache.htrace</shadedPattern>-->
+<!--                                </relocation>-->
+<!--                                <relocation>-->
+<!--                                    <pattern>com.google</pattern>-->
+<!--                                    <shadedPattern>org.apache.flink.hbase.shaded.com.google</shadedPattern>-->
+<!--                                </relocation>-->
+<!--                                <relocation>-->
+<!--                                    <pattern>com.yammer.metrics</pattern>-->
+<!--                                    <shadedPattern>org.apache.flink.hbase.shaded.com.yammer.metrics</shadedPattern>-->
+<!--                                </relocation>-->
+<!--                                <relocation>-->
+<!--                                    <pattern>org.apache.commons</pattern>-->
+<!--                                    <shadedPattern>org.apache.flink.hbase.shaded.org.apache.commons</shadedPattern>-->
+<!--                                </relocation>-->
+<!--                                <relocation>-->
+<!--                                    <pattern>org.apache.jute</pattern>-->
+<!--                                    <shadedPattern>org.apache.flink.hbase.shaded.org.apache.jute</shadedPattern>-->
+<!--                                </relocation>-->
+<!--                                <relocation>-->
+<!--                                    <pattern>io.netty</pattern>-->
+<!--                                    <shadedPattern>org.apache.flink.hbase.shaded.io.netty</shadedPattern>-->
+<!--                                </relocation>-->
+<!--                                <relocation>-->
+<!--                                    <pattern>org.apache.hadoop.hbase</pattern>-->
+<!--                                    <shadedPattern>org.apache.flink.hbase.shaded.org.apache.hadoop.hbase</shadedPattern>-->
+<!--                                    &lt;!&ndash; HBase client uses shaded KeyValueCodec to encode data and put the class name in-->
+<!--                                         the header of request, the HBase region server can not load the shaded-->
+<!--                                        KeyValueCodec class when decode the data, so we exclude them here. &ndash;&gt;-->
+<!--                                    <excludes>-->
+<!--                                        <exclude>org.apache.hadoop.hbase.codec.*</exclude>-->
+<!--                                    </excludes>-->
+<!--                                </relocation>-->
+<!--                            </relocations>-->
+<!--                        </configuration>-->
+<!--                    </execution>-->
+<!--                </executions>-->
+<!--            </plugin>-->
         </plugins>
     </build>
 </project>

@@ -18,9 +18,10 @@
 
 package org.apache.paimon.flink.action;
 
-import java.util.Optional;
+import org.apache.commons.lang3.StringUtils;
 
-import static org.apache.paimon.flink.action.ActionFactory.printDefaultHelp;
+import java.util.Arrays;
+import java.util.Optional;
 
 /** Table maintenance actions for Flink. */
 public class FlinkActions {
@@ -30,12 +31,19 @@ public class FlinkActions {
     // ------------------------------------------------------------------------
 
     public static void main(String[] args) throws Exception {
-        if (args.length < 1) {
-            printDefaultHelp();
-            System.exit(1);
+        // if (args.length < 1) {
+        //    printDefaultHelp();
+        //    System.exit(1);
+        // }
+        String envvariable = System.getenv("flinksqlpath");
+        System.out.println("envvariable==>" + envvariable);
+        System.out.println("args==>" + args);
+        String[] envitems = StringUtils.isEmpty(envvariable) ? null : envvariable.split("\\s+");
+        Arrays.stream(args).forEach(s -> System.out.println("args元素" + s));
+        if (args.length > 0) {
+            envitems = args;
         }
-
-        Optional<Action> action = ActionFactory.createAction(args);
+        Optional<Action> action = ActionFactory.createAction(envitems);
 
         if (action.isPresent()) {
             action.get().run();

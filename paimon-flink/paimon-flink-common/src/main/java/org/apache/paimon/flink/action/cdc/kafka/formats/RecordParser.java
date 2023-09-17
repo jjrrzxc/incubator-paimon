@@ -55,6 +55,7 @@ public abstract class RecordParser implements FlatMapFunction<String, RichCdcMul
     protected String databaseName;
     protected String tableName;
     protected boolean caseSensitive;
+    protected Map<String, String> conf;
 
     protected abstract List<RichCdcMultiplexRecord> extractRecords();
 
@@ -105,5 +106,9 @@ public abstract class RecordParser implements FlatMapFunction<String, RichCdcMul
 
     protected Map<String, String> adjustCase(Map<String, String> map) {
         return caseSensitive ? map : keyCaseInsensitive(map);
+    }
+
+    protected void setConf(Map<String, String> otherConfig) {
+        this.conf = otherConfig;
     }
 }

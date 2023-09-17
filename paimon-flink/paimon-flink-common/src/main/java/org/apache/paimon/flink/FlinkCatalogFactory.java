@@ -22,6 +22,7 @@ import org.apache.paimon.catalog.Catalog;
 import org.apache.paimon.catalog.CatalogContext;
 import org.apache.paimon.catalog.CatalogFactory;
 import org.apache.paimon.options.Options;
+import org.apache.paimon.oss.OSSLoader;
 
 import java.util.Collections;
 import java.util.Set;
@@ -78,6 +79,7 @@ public class FlinkCatalogFactory implements org.apache.flink.table.factories.Cat
 
     public static Catalog createPaimonCatalog(Options catalogOptions) {
         return CatalogFactory.createCatalog(
-                CatalogContext.create(catalogOptions, new FlinkFileIOLoader()));
+                // CatalogContext.create(catalogOptions, new FlinkFileIOLoader()));
+                CatalogContext.create(catalogOptions, new OSSLoader()));
     }
 }

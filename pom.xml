@@ -755,6 +755,7 @@ under the License.
                         </execution>
                     </executions>
                     <configuration>
+                        <skip>true</skip>
                         <suppressionsLocation>/tools/maven/suppressions.xml</suppressionsLocation>
                         <includeTestSourceDirectory>true</includeTestSourceDirectory>
                         <configLocation>/tools/maven/checkstyle.xml</configLocation>

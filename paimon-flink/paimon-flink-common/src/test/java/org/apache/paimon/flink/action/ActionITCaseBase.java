@@ -26,7 +26,7 @@ import org.apache.paimon.data.DataFormatTestUtil;
 import org.apache.paimon.data.GenericRow;
 import org.apache.paimon.data.InternalRow;
 import org.apache.paimon.flink.util.AbstractTestBase;
-import org.apache.paimon.fs.Path;
+import org.apache.paimon.options.Options;
 import org.apache.paimon.reader.RecordReader;
 import org.apache.paimon.schema.Schema;
 import org.apache.paimon.table.FileStoreTable;
@@ -44,6 +44,7 @@ import org.junit.jupiter.api.BeforeEach;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -64,7 +65,8 @@ public abstract class ActionITCaseBase extends AbstractTestBase {
 
     @BeforeEach
     public void before() throws IOException {
-        warehouse = getTempDirPath();
+        // warehouse = getTempDirPath();
+        warehouse = "oss://lc-bigdata/store";
         database = "default";
         tableName = "test_table_" + UUID.randomUUID();
         commitUser = UUID.randomUUID().toString();
@@ -74,7 +76,12 @@ public abstract class ActionITCaseBase extends AbstractTestBase {
         env.setParallelism(2);
         env.enableCheckpointing(1000);
         env.setRestartStrategy(RestartStrategies.noRestart());
-        catalog = CatalogFactory.createCatalog(CatalogContext.create(new Path(warehouse)));
+        Map<String, String> catalogconfig = new HashMap<>();
+        catalogconfig.put("warehouse", "oss://lc-bigdata/store");
+        catalogconfig.put("fs.oss.endpoint", "oss-cn-hangzhou.aliyuncs.com");
+        catalogconfig.put("fs.oss.accessKeyId", "LTAI5tQzQUqz8uTRo9iivgod");
+        catalogconfig.put("fs.oss.accessKeySecret", "2k2fg34HRvZTzECLfb7eKOxPFtN3Wf");
+        catalog = CatalogFactory.createCatalog(CatalogContext.create(new Options(catalogconfig)));
     }
 
     @AfterEach

@@ -303,6 +303,24 @@ under the License.
             <version>${mongodb.testcontainers.version}</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-oss-fs-hadoop</artifactId>
+            <version>1.17.1</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.paimon</groupId>
+            <artifactId>paimon-oss</artifactId>
+            <version>0.5-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-runtime-web</artifactId>
+            <version>1.17.1</version>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -321,15 +339,16 @@ under the License.
                             <artifactSet>
                                 <includes combine.children="append">
                                     <include>org.apache.paimon:paimon-bundle</include>
+                                    <include>org.apache.paimon:paimon-oss</include>
                                 </includes>
                             </artifactSet>
-                            <relocations>
-                                <!-- Same as flink-sql-connector-kafka. -->
-                                <relocation>
-                                    <pattern>org.apache.kafka</pattern>
-                                    <shadedPattern>org.apache.flink.kafka.shaded.org.apache.kafka</shadedPattern>
-                                </relocation>
-                            </relocations>
+<!--                            <relocations>-->
+<!--                                &lt;!&ndash; Same as flink-sql-connector-kafka. &ndash;&gt;-->
+<!--                                <relocation>-->
+<!--                                    <pattern>org.apache.kafka</pattern>-->
+<!--                                    <shadedPattern>org.apache.flink.kafka.shaded.org.apache.kafka</shadedPattern>-->
+<!--                                </relocation>-->
+<!--                            </relocations>-->
                         </configuration>
                     </execution>
                 </executions>

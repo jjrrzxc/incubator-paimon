@@ -52,6 +52,7 @@ public class KafkaSyncDatabaseActionFactory implements ActionFactory {
         Map<String, String> kafkaConfigOption = optionalConfigMap(params, "kafka-conf");
         Map<String, String> catalogConfigOption = optionalConfigMap(params, "catalog-conf");
         Map<String, String> tableConfigOption = optionalConfigMap(params, "table-conf");
+        Map<String, String> otherConfigOption = optionalConfigMap(params, "other-conf");
         return Optional.of(
                 new KafkaSyncDatabaseAction(
                         kafkaConfigOption,
@@ -62,7 +63,8 @@ public class KafkaSyncDatabaseActionFactory implements ActionFactory {
                         includingTables,
                         excludingTables,
                         catalogConfigOption,
-                        tableConfigOption));
+                        tableConfigOption,
+                        otherConfigOption));
     }
 
     @Override

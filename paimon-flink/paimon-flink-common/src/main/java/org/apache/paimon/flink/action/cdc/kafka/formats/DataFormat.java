@@ -21,12 +21,14 @@ package org.apache.paimon.flink.action.cdc.kafka.formats;
 import org.apache.paimon.flink.action.cdc.ComputedColumn;
 import org.apache.paimon.flink.action.cdc.TableNameConverter;
 import org.apache.paimon.flink.action.cdc.kafka.formats.canal.CanalRecordParser;
+import org.apache.paimon.flink.action.cdc.kafka.formats.maxwell.MaxwellRecordParser;
 import org.apache.paimon.flink.action.cdc.kafka.formats.ogg.OggRecordParser;
 
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.connectors.kafka.table.KafkaConnectorOptions;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Enumerates the supported data formats and provides a mechanism to create their associated {@link
@@ -37,7 +39,8 @@ import java.util.List;
  */
 public enum DataFormat {
     CANAL_JSON(CanalRecordParser::new),
-    OGG_JSON(OggRecordParser::new);
+    OGG_JSON(OggRecordParser::new),
+    MAXWELL_JSON(MaxwellRecordParser::new);
     // Add more data formats here if needed
 
     private final RecordParserFactory parser;
@@ -60,6 +63,19 @@ public enum DataFormat {
             TableNameConverter tableNameConverter,
             List<ComputedColumn> computedColumns) {
         return parser.createParser(caseSensitive, tableNameConverter, computedColumns);
+    }
+
+    public RecordParser createParser(
+            boolean caseSensitive,
+            TableNameConverter tableNameConverter,
+            List<ComputedColumn> computedColumns,
+            Map<String, String> otherConfig) {
+        RecordParser recordParser =
+                parser.createParser(caseSensitive, tableNameConverter, computedColumns);
+        if (recordParser instanceof MaxwellRecordParser) {
+            recordParser.setConf(otherConfig);
+        }
+        return recordParser;
     }
 
     /**
