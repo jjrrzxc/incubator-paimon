@@ -93,10 +93,7 @@ public class KafkaMaxwellSyncDatabaseActionITCase extends KafkaActionITCaseBase 
         tableConfig.put("sink.parallelism", sinkparallelism);
         tableConfig.put("changelog-producer", "input");
         Map<String, String> catalogconfig = new HashMap<>();
-        catalogconfig.put("fs.oss.endpoint", "oss-cn-hangzhou.aliyuncs.com");
-        catalogconfig.put("fs.oss.accessKeyId", "LTAI5tQzQUqz8uTRo9iivgod");
-        catalogconfig.put("fs.oss.accessKeySecret", "2k2fg34HRvZTzECLfb7eKOxPFtN3Wf");
-        String tableprefix = "ods_dental_";
+        String tableprefix = "xxx";
         KafkaSyncDatabaseAction action =
                 new KafkaSyncDatabaseAction(
                         kafkaConfig,

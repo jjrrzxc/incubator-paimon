@@ -77,10 +77,6 @@ public abstract class ActionITCaseBase extends AbstractTestBase {
         env.enableCheckpointing(1000);
         env.setRestartStrategy(RestartStrategies.noRestart());
         Map<String, String> catalogconfig = new HashMap<>();
-        catalogconfig.put("warehouse", "oss://lc-bigdata/store");
-        catalogconfig.put("fs.oss.endpoint", "oss-cn-hangzhou.aliyuncs.com");
-        catalogconfig.put("fs.oss.accessKeyId", "LTAI5tQzQUqz8uTRo9iivgod");
-        catalogconfig.put("fs.oss.accessKeySecret", "2k2fg34HRvZTzECLfb7eKOxPFtN3Wf");
         catalog = CatalogFactory.createCatalog(CatalogContext.create(new Options(catalogconfig)));
     }
 
