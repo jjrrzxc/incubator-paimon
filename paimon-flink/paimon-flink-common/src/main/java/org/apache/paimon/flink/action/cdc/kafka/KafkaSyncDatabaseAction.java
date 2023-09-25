@@ -24,6 +24,7 @@ import org.apache.paimon.flink.action.Action;
 import org.apache.paimon.flink.action.ActionBase;
 import org.apache.paimon.flink.action.cdc.DatabaseSyncMode;
 import org.apache.paimon.flink.action.cdc.TableNameConverter;
+import org.apache.paimon.flink.action.cdc.kafka.filter.CDCFilter;
 import org.apache.paimon.flink.action.cdc.kafka.formats.DataFormat;
 import org.apache.paimon.flink.action.cdc.kafka.formats.RecordParser;
 import org.apache.paimon.flink.sink.cdc.EventParser;
@@ -46,6 +47,7 @@ import javax.annotation.Nullable;
 
 import java.util.Collections;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
@@ -174,7 +176,12 @@ public class KafkaSyncDatabaseAction extends ActionBase {
                                                 source,
                                                 WatermarkStrategy.noWatermarks(),
                                                 "Kafka Source")
-                                        .flatMap(recordParser))
+                                        .flatMap(recordParser)
+                                        .filter(
+                                                new CDCFilter(
+                                                        Optional.ofNullable(
+                                                                otherConfig.get(
+                                                                        "original.database")))))
                         .withParserFactory(parserFactory)
                         .withCatalogLoader(catalogLoader())
                         .withDatabase(database)
@@ -233,7 +240,7 @@ public class KafkaSyncDatabaseAction extends ActionBase {
         env.execute(String.format("KAFKA-Paimon Database Sync: %s", database));
     }
 
-    private static <T> void checkpointInit(StreamExecutionEnvironment env) {
+    private <T> void checkpointInit(StreamExecutionEnvironment env) {
         env.enableCheckpointing(300000);
         env.getCheckpointConfig().setCheckpointingMode(CheckpointingMode.EXACTLY_ONCE);
         env.getCheckpointConfig().setMinPauseBetweenCheckpoints(60000);
@@ -246,5 +253,9 @@ public class KafkaSyncDatabaseAction extends ActionBase {
                 RestartStrategies.fixedDelayRestart(
                         Integer.MAX_VALUE, Time.of(10000, TimeUnit.MILLISECONDS)));
         env.setStateBackend(new HashMapStateBackend());
+        // 配置化
+        if (otherConfig.get("checkpoint.storage") != null) {
+            env.getCheckpointConfig().setCheckpointStorage(otherConfig.get("checkpoint.storage"));
+        }
     }
 }

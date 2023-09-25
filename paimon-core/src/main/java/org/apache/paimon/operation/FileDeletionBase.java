@@ -198,7 +198,11 @@ public abstract class FileDeletionBase {
         try {
             return manifestList.read(manifestListName);
         } catch (Exception e) {
-            LOG.warn("Failed to read manifest list file " + manifestListName, e);
+            // LOG.warn("Failed to read manifest list file " + manifestListName, e);
+            LOG.info(
+                    "Failed to read manifest list file "
+                            + pathFactory.toManifestListPath(manifestListName),
+                    e);
             return Collections.emptyList();
         }
     }

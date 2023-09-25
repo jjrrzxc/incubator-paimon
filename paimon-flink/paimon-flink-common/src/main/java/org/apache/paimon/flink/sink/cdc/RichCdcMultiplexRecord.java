@@ -53,6 +53,10 @@ public class RichCdcMultiplexRecord implements Serializable {
         return tableName;
     }
 
+    public String originalDatabase() {
+        return databaseName;
+    }
+
     public LinkedHashMap<String, DataType> fieldTypes() {
         return fieldTypes;
     }

@@ -102,7 +102,8 @@ public abstract class ObjectsFile<T> {
             reader.forEachRemaining(row -> result.add(serializer.fromRow(row)));
             return result;
         } catch (IOException e) {
-            throw new RuntimeException("Failed to read manifest list " + fileName, e);
+            throw new RuntimeException(
+                    "Failed to read manifest list " + pathFactory.toPath(fileName), e);
         }
     }
 
