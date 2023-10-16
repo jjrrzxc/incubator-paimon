@@ -96,8 +96,9 @@ public class MaxwellRecordParser extends RecordParser {
         validateFormat();
         databaseName = extractString(FIELD_DATABASE);
         tableName = tableNameConverter.convert(extractString(FIELD_TABLE));
-
-        extractRecords().forEach(out::collect);
+        if (root.get(FIELD_MYSQL_TYPE) != null && root.get(FIELD_PRIMARY_KEYS) != null) {
+            extractRecords().forEach(out::collect);
+        }
     }
 
     protected List<RichCdcMultiplexRecord> extractRecords() {
@@ -286,10 +287,11 @@ public class MaxwellRecordParser extends RecordParser {
 
         if (isDdl()) {
             checkNotNull(root.get(FIELD_SQL), errorMessageTemplate, FIELD_SQL);
-        } else {
-            checkNotNull(root.get(FIELD_MYSQL_TYPE), errorMessageTemplate, FIELD_MYSQL_TYPE);
-            checkNotNull(root.get(FIELD_PRIMARY_KEYS), errorMessageTemplate, FIELD_PRIMARY_KEYS);
         }
+        // else {
+        //    checkNotNull(root.get(FIELD_MYSQL_TYPE), errorMessageTemplate, FIELD_MYSQL_TYPE);
+        //    checkNotNull(root.get(FIELD_PRIMARY_KEYS), errorMessageTemplate, FIELD_PRIMARY_KEYS);
+        // }
     }
 
     protected String extractString(String key) {

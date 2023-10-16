@@ -29,8 +29,6 @@ import javax.annotation.Nonnull;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.stream.Collectors;
 
 /** The facade for the provided I/O manager services. */
 public class IOManagerImpl implements IOManager {
@@ -52,14 +50,15 @@ public class IOManagerImpl implements IOManager {
     public IOManagerImpl(String... tempDirs) {
         this.fileChannelManager =
                 new FileChannelManagerImpl(Preconditions.checkNotNull(tempDirs), DIR_NAME_PREFIX);
-        if (LOG.isInfoEnabled()) {
-            LOG.info(
-                    "Created a new {} for spilling of task related data to disk (joins, sorting, ...). Used directories:\n\t{}",
-                    FileChannelManager.class.getSimpleName(),
-                    Arrays.stream(fileChannelManager.getPaths())
-                            .map(File::getAbsolutePath)
-                            .collect(Collectors.joining("\n\t")));
-        }
+        // if (LOG.isInfoEnabled()) {
+        //    LOG.info(
+        //            "Created a new {} for spilling of task related data to disk (joins, sorting,
+        // ...). Used directories:\n\t{}",
+        //            FileChannelManager.class.getSimpleName(),
+        //            Arrays.stream(fileChannelManager.getPaths())
+        //                    .map(File::getAbsolutePath)
+        //                    .collect(Collectors.joining("\n\t")));
+        // }
     }
 
     /** Removes all temporary files. */

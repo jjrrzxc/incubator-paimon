@@ -112,10 +112,10 @@ public abstract class UpdatedDataFieldsProcessFunctionBase<I, O> extends Process
                     catalog.alterTable(identifier, schemaChange, false);
                     break;
                 case EXCEPTION:
-                    throw new UnsupportedOperationException(
+                    System.out.println(
                             String.format(
-                                    "Cannot convert field %s from type %s to %s",
-                                    updateColumnType.fieldName(), oldType, newType));
+                                    "Cannot convert field %s from type %s to %s,identifier is %s",
+                                    updateColumnType.fieldName(), oldType, newType, identifier));
             }
         } else if (schemaChange instanceof SchemaChange.UpdateColumnComment) {
             catalog.alterTable(identifier, schemaChange, false);
